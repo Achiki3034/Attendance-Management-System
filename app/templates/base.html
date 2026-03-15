@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>{% block title %}AttendX | University Attendance{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% if current_user.is_authenticated %}
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div>
+            <div class="logo-title">AttendX</div>
+            <div class="logo-sub">University System</div>
+          </div>
+        </div>
+      </div>
+      <div class="user-card">
+        {% if current_user.profile_picture %}
+      <div class="user-avatar avatar-photo">
+        <img src="{{ url_for('static', filename='avatars/' + current_user.profile_picture) }}" alt="avatar" />
+      </div>
+      {% else %}
+      <div class="user-avatar">{{ current_user.full_name[0].upper() }}</div>
+      {% endif %}
+        <div class="user-info">
+          <div class="user-name">{{ current_user.full_name }}</div>
+          <div class="user-badge {{ current_user.role }}">{{ current_user.role.capitalize() }}</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+        <a href="{{ url_for('admin.users') }}" class="nav-item {% if 'user' in request.endpoint %}active{% endif %}"><i class="fas fa-users"></i><span>Users</span></a>
+        <a href="{{ url_for('admin.courses') }}" class="nav-item {% if 'course' in request.endpoint %}active{% endif %}"><i class="fas fa-book-open"></i><span>Courses</span></a>
+        <a href="{{ url_for('admin.enrollments') }}" class="nav-item {% if 'enrollment' in request.endpoint %}active{% endif %}"><i class="fas fa-user-plus"></i><span>Enrollments</span></a>
+        <a href="{{ url_for('admin.reports') }}" class="nav-item {% if 'report' in request.endpoint %}active{% endif %}"><i class="fas fa-file-alt"></i><span>Reports</span></a>
+        <a href="{{ url_for('admin.profile') }}" class="nav-item {% if 'profile' in request.endpoint %}active{% endif %}"><i class="fas fa-circle-user"></i><span>My Profile</span></a>
+        {% elif current_user.role == 'lecturer' %}
+        <a href="{{ url_for('lecturer.dashboard') }}" class="nav-item {% if request.endpoint == 'lecturer.dashboard' %}active{% endif %}"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+        <a href="{{ url_for('lecturer.courses') }}" class="nav-item {% if 'course' in request.endpoint %}active{% endif %}"><i class="fas fa-book-open"></i><span>My Courses</span></a>
+        <a href="{{ url_for('lecturer.profile') }}" class="nav-item {% if 'profile' in request.endpoint %}active{% endif %}"><i class="fas fa-circle-user"></i><span>My Profile</span></a>
+        {% elif current_user.role == 'student' %}
+        <a href="{{ url_for('student.dashboard') }}" class="nav-item {% if request.endpoint == 'student.dashboard' %}active{% endif %}"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+        <a href="{{ url_for('student.history') }}" class="nav-item {% if 'history' in request.endpoint %}active{% endif %}"><i class="fas fa-clock-rotate-left"></i><span>My History</span></a>
+        <a href="{{ url_for('student.profile') }}" class="nav-item {% if 'profile' in request.endpoint %}active{% endif %}"><i class="fas fa-circle-user"></i><span>My Profile</span></a>
+        {% endif %}
+      </nav>
+      <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="nav-item logout"><i class="fas fa-right-from-bracket"></i><span>Sign Out</span></a>
+      </div>
+    </aside>
+    <main class="main-content">
+      <div class="topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+        <div class="page-title">{% block page_title %}Dashboard{% endblock %}</div>
+        <div class="topbar-right"><span class="topbar-date" id="liveDate"></span></div>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <i class="fas fa-{% if category == 'success' %}circle-check{% elif category == 'danger' %}circle-xmark{% elif category == 'warning' %}triangle-exclamation{% else %}circle-info{% endif %}"></i>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()"><i class="fas fa-xmark"></i></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      <div class="content-area">{% block content %}{% endblock %}</div>
+    </main>
+  </div>
+  {% else %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container auth-flash">
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      <i class="fas fa-{% if category == 'success' %}circle-check{% elif category == 'danger' %}circle-xmark{% else %}circle-info{% endif %}"></i>
+      {{ message }}
+      <button class="flash-close" onclick="this.parentElement.remove()"><i class="fas fa-xmark"></i></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  {% block auth_content %}{% endblock %}
+  {% endif %}
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Mobile bottom nav (students only) -->
+  {% if current_user.is_authenticated and current_user.role == 'student' %}
+  <nav class="mobile-bottom-nav">
+    <a href="{{ url_for('student.dashboard') }}" class="mbn-item {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+      <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('student.history') }}" class="mbn-item {% if 'history' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-clock-rotate-left"></i><span>History</span>
+    </a>
+    <a href="{{ url_for('student.profile') }}" class="mbn-item {% if 'profile' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-circle-user"></i><span>Profile</span>
+    </a>
+    <a href="{{ url_for('auth.logout') }}" class="mbn-item">
+      <i class="fas fa-right-from-bracket"></i><span>Logout</span>
+    </a>
+  </nav>
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

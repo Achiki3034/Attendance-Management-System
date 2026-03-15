@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Enrollments | AttendX{% endblock %}
+{% block page_title %}Enrollment Management{% endblock %}
+{% block content %}
+<div class="section-card">
+  <div class="section-header"><h3><i class="fas fa-user-plus"></i> Enroll Student in Course</h3></div>
+  <form method="POST" action="{{ url_for('admin.create_enrollment') }}" class="inline-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Student</label>
+        <select name="student_id" class="form-control" required>
+          <option value="">Select Student</option>
+          {% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.student_id or s.email }})</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Course</label>
+        <select name="course_id" class="form-control" required>
+          <option value="">Select Course</option>
+          {% for c in courses %}<option value="{{ c.id }}">{{ c.course_code }} – {{ c.course_name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group align-end">
+        <button type="submit" class="btn-primary">Enroll</button>
+      </div>
+    </div>
+  </form>
+</div>
+<div class="section-card">
+  <div class="section-header"><h3><i class="fas fa-list-check"></i> All Enrollments ({{ enrollments|length }})</h3></div>
+  {% if enrollments %}
+  <table class="data-table">
+    <thead><tr><th>Student</th><th>Student ID</th><th>Course</th><th>Department</th><th>Enrolled On</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for e in enrollments %}
+    <tr>
+      <td>{{ e.student.full_name }}</td>
+      <td>{{ e.student.student_id or '—' }}</td>
+      <td><span class="code-badge">{{ e.course.course_code }}</span> {{ e.course.course_name }}</td>
+      <td>{{ e.course.department }}</td>
+      <td>{{ e.enrolled_at.strftime('%d %b %Y') }}</td>
+      <td><form method="POST" action="{{ url_for('admin.delete_enrollment', enrollment_id=e.id) }}" onsubmit="return confirm('Remove enrollment?')"><button type="submit" class="btn-danger-sm"><i class="fas fa-times"></i></button></form></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="empty-state"><i class="fas fa-list"></i><p>No enrollments yet</p></div>{% endif %}
+</div>
+{% endblock %}

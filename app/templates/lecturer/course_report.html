@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.course_code }} Report | AttendX{% endblock %}
+{% block page_title %}{{ course.course_code }} – Attendance Report{% endblock %}
+{% block content %}
+
+<div class="page-actions no-print">
+  <a href="{{ url_for('lecturer.dashboard') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+  <button onclick="window.print()" class="btn-secondary"><i class="fas fa-print"></i> Print Report</button>
+  <button onclick="downloadReport()" class="btn-primary"><i class="fas fa-download"></i> Download PDF</button>
+</div>
+
+<!-- Print header (hidden on screen) -->
+<div class="print-header">
+  <h1>AttendX – Attendance Report</h1>
+  <h2>{{ course.course_code }}: {{ course.course_name }}</h2>
+  <p>Department: {{ course.department }} &bull; Semester: {{ course.semester }}</p>
+  <p>Lecturer: {{ course.lecturer.full_name if course.lecturer else 'Not assigned' }}</p>
+  <p>Generated: <span id="printDate"></span></p>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><div class="stat-value">{{ sessions|length }}</div><div class="stat-label">Total Sessions</div></div></div>
+  <div class="stat-card green"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><div class="stat-value">{{ report|length }}</div><div class="stat-label">Enrolled Students</div></div></div>
+  <div class="stat-card red"><div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div><div class="stat-info"><div class="stat-value">{{ report|selectattr('defaulter')|list|length }}</div><div class="stat-label">Defaulters</div></div></div>
+  <div class="stat-card purple">
+    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+    <div class="stat-info">
+      <div class="stat-value">
+        {% if report %}{{ (report|sum(attribute='percentage') / report|length)|round(1) }}%{% else %}0%{% endif %}
+      </div>
+      <div class="stat-label">Avg Attendance</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHART SECTION -->
+{% if report %}
+<div class="report-charts no-print">
+  <div class="section-card">
+    <div class="section-header">
+      <h3><i class="fas fa-chart-pie"></i> Visualizations</h3>
+      <!-- Chart type picker -->
+      <div class="chart-type-picker">
+        <button class="ctp-btn active" data-chart="bar">
+          <i class="fas fa-chart-bar"></i> Bar
+        </button>
+        <button class="ctp-btn" data-chart="pie">
+          <i class="fas fa-chart-pie"></i> Pie
+        </button>
+        <button class="ctp-btn" data-chart="doughnut">
+          <i class="fas fa-circle-half-stroke"></i> Doughnut
+        </button>
+        <button class="ctp-btn" data-chart="line">
+          <i class="fas fa-chart-line"></i> Line
+        </button>
+        <button class="ctp-btn" data-chart="polarArea">
+          <i class="fas fa-star-half-stroke"></i> Polar
+        </button>
+      </div>
+    </div>
+    <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
+      <div>
+        <canvas id="attendanceChart" height="280"></canvas>
+      </div>
+      <div>
+        <canvas id="passFailChart" height="280"></canvas>
+      </div>
+    </div>
+    <div style="padding:0 24px 16px;font-size:12px;color:#64748b;text-align:center">
+      Left: Individual student attendance % &nbsp;|&nbsp; Right: Passed vs Defaulters ratio
+    </div>
+  </div>
+</div>
+
+<!-- Print chart (static version) -->
+<div class="print-chart-placeholder">
+  <p><em>Charts available in digital version. See table below for full data.</em></p>
+</div>
+{% endif %}
+
+<!-- Attendance Table -->
+<div class="section-card">
+  <div class="section-header">
+    <h3><i class="fas fa-table"></i> Student Attendance Details</h3>
+    <div class="no-print" style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="tableSearch" class="form-control" style="width:200px;padding:6px 12px;font-size:13px" placeholder="Search student..." />
+    </div>
+  </div>
+  {% if report %}
+  <table class="data-table" id="reportTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Student Name</th>
+        <th>Student ID</th>
+        <th>Attended</th>
+        <th>Missed</th>
+        <th>Total</th>
+        <th>Percentage</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in report %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r.student.full_name }}</td>
+      <td>{{ r.student.student_id or '—' }}</td>
+      <td class="green-text"><strong>{{ r.attended }}</strong></td>
+      <td class="red-text"><strong>{{ r.total - r.attended }}</strong></td>
+      <td>{{ r.total }}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;min-width:120px">
+          <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+            <div style="height:8px;width:{{ r.percentage }}%;background:{% if r.percentage >= 75 %}#10b981{% else %}#ef4444{% endif %};border-radius:4px"></div>
+          </div>
+          <span style="font-size:13px;font-weight:700;min-width:40px">{{ r.percentage }}%</span>
+        </div>
+      </td>
+      <td>
+        {% if r.defaulter %}
+        <span class="badge badge-red"><i class="fas fa-triangle-exclamation"></i> Defaulter</span>
+        {% else %}
+        <span class="badge badge-green"><i class="fas fa-circle-check"></i> Good</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-users"></i><p>No students enrolled</p></div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+// Set print date
+document.getElementById('printDate').textContent = new Date().toLocaleString();
+
+// ── Chart data from Jinja
+const studentNames  = [{% for r in report %}'{{ r.student.full_name.split()[0] }}'{% if not loop.last %},{% endif %}{% endfor %}];
+const percentages   = [{% for r in report %}{{ r.percentage }}{% if not loop.last %},{% endif %}{% endfor %}];
+const passCount     = {{ report|rejectattr('defaulter')|list|length }};
+const failCount     = {{ report|selectattr('defaulter')|list|length }};
+
+const COLORS = percentages.map(p => p >= 75 ? '#10b981' : '#ef4444');
+const COLORS_ALPHA = percentages.map(p => p >= 75 ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.15)');
+
+// ── Main chart (switchable)
+const mainCtx = document.getElementById('attendanceChart').getContext('2d');
+let mainChart = null;
+
+function buildMainChart(type) {
+  if (mainChart) mainChart.destroy();
+  const isLine = type === 'line';
+  mainChart = new Chart(mainCtx, {
+    type: type,
+    data: {
+      labels: studentNames,
+      datasets: [{
+        label: 'Attendance %',
+        data: percentages,
+        backgroundColor: (type === 'bar') ? COLORS : ['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6','#06b6d4','#ec4899','#f97316','#14b8a6'],
+        borderColor: isLine ? '#4f46e5' : COLORS,
+        borderWidth: isLine ? 2 : 1,
+        fill: isLine,
+        tension: 0.4,
+        pointBackgroundColor: isLine ? COLORS : undefined,
+        pointRadius: isLine ? 5 : undefined,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: type !== 'bar' && type !== 'line' },
+        tooltip: { callbacks: { label: c => ` ${c.label || c.parsed.y || c.parsed}%` } }
+      },
+      scales: (type === 'bar' || type === 'line') ? {
+        y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+      } : {}
+    }
+  });
+}
+buildMainChart('bar');
+
+// ── Pass/Fail donut
+const pfCtx = document.getElementById('passFailChart').getContext('2d');
+new Chart(pfCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Good Standing', 'Defaulters'],
+    datasets: [{
+      data: [passCount, failCount],
+      backgroundColor: ['#10b981','#ef4444'],
+      borderWidth: 3,
+      borderColor: '#fff',
+      hoverOffset: 8
+    }]
+  },
+  options: {
+    cutout: '65%',
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed} students` } }
+    }
+  }
+});
+
+// ── Chart type switcher
+document.querySelectorAll('.ctp-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.ctp-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    buildMainChart(this.dataset.chart);
+  });
+});
+
+// ── Table search
+document.getElementById('tableSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#reportTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// ── Download PDF (print to PDF)
+function downloadReport() {
+  const original = document.title;
+  document.title = '{{ course.course_code }}_Attendance_Report';
+  window.print();
+  document.title = original;
+}
+</script>
+{% endblock %}

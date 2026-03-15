@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Lecturer Dashboard | AttendX{% endblock %}
+{% block page_title %}Lecturer Dashboard{% endblock %}
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-book-open"></i></div><div class="stat-info"><div class="stat-value">{{ courses|length }}</div><div class="stat-label">My Courses</div></div></div>
+  <div class="stat-card green"><div class="stat-icon"><i class="fas fa-circle-dot"></i></div><div class="stat-info"><div class="stat-value">{{ active_sessions|length }}</div><div class="stat-label">Active Sessions</div></div></div>
+  <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><div class="stat-value">{{ recent_sessions|length }}</div><div class="stat-label">Recent Sessions</div></div></div>
+</div>
+
+{% if active_sessions %}
+<div class="section-card highlight-card">
+  <div class="section-header"><h3><i class="fas fa-circle-dot pulse"></i> Active Sessions</h3></div>
+  {% for s in active_sessions %}
+  <div class="active-session-banner">
+    <div class="session-info">
+      <strong>{{ s.course.course_code }}</strong> – {{ s.course.course_name }}
+      <span class="session-time">Started {{ s.start_time.strftime('%I:%M %p') }}</span>
+    </div>
+    <div class="session-actions">
+      <a href="{{ url_for('lecturer.session_detail', session_id=s.id) }}" class="btn-primary"><i class="fas fa-eye"></i> View</a>
+      <form method="POST" action="{{ url_for('lecturer.close_session', session_id=s.id) }}" style="display:inline" onsubmit="return confirm('Close this session?')">
+        <button type="submit" class="btn-secondary"><i class="fas fa-stop-circle"></i> Close</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="section-card">
+  <div class="section-header"><h3><i class="fas fa-book-open"></i> My Courses</h3></div>
+  {% if courses %}
+  <div class="course-grid">
+    {% for c in courses %}
+    <div class="course-card">
+      <div class="course-code">{{ c.course_code }}</div>
+      <div class="course-name">{{ c.course_name }}</div>
+      <div class="course-meta">{{ c.department }} &bull; {{ c.semester }}</div>
+      <div class="course-stats">
+        <span><i class="fas fa-users"></i> {{ c.enrollments.count() }} students</span>
+        <span><i class="fas fa-calendar"></i> {{ c.get_total_sessions() }} sessions</span>
+      </div>
+      <div class="course-actions">
+        <form method="POST" action="{{ url_for('lecturer.start_session', course_id=c.id) }}">
+          <button type="submit" class="btn-primary full"><i class="fas fa-qrcode"></i> Start Attendance</button>
+        </form>
+        <a href="{{ url_for('lecturer.course_report', course_id=c.id) }}" class="btn-secondary full"><i class="fas fa-chart-bar"></i> Report</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-book"></i><p>No courses assigned to you yet. Contact admin.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

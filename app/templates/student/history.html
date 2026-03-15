@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Attendance History | AttendX{% endblock %}
+{% block page_title %}My Attendance History{% endblock %}
+{% block content %}
+
+<!-- Summary stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+  {% set total_attended = records|length %}
+  {% set total_all = namespace(val=0) %}
+  {% for s in summary %}{% set total_all.val = total_all.val + s.total_sessions %}{% endfor %}
+  {% set total_missed = total_all.val - total_attended %}
+
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ total_attended }}</div><div class="stat-label">Classes Attended</div></div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ total_missed }}</div><div class="stat-label">Classes Missed</div></div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ total_all.val }}</div><div class="stat-label">Total Sessions</div></div>
+  </div>
+  <div class="stat-card {% if overall_pct >= 75 %}green{% else %}orange{% endif %}">
+    <div class="stat-icon"><i class="fas fa-percent"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ overall_pct }}%</div><div class="stat-label">Overall Rate</div></div>
+  </div>
+</div>
+
+<!-- Per-course missed breakdown -->
+{% if summary %}
+<div class="section-card" style="margin-bottom:24px">
+  <div class="section-header"><h3><i class="fas fa-chart-bar"></i> Missed Classes Per Course</h3></div>
+  <div style="padding:16px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+    {% for s in summary %}
+    <a href="{{ url_for('student.course_detail', course_id=s.course.id) }}" class="missed-course-card {% if s.low_attendance %}missed-danger{% endif %}">
+      <div class="mc-top">
+        <span class="mc-code">{{ s.course.course_code }}</span>
+        {% if s.low_attendance %}<span class="badge badge-red">At Risk</span>{% else %}<span class="badge badge-green">Good</span>{% endif %}
+      </div>
+      <div class="mc-name">{{ s.course.course_name }}</div>
+      <div class="mc-stats">
+        <div class="mc-stat green-stat">
+          <i class="fas fa-circle-check"></i>
+          <span>{{ s.attended }} attended</span>
+        </div>
+        <div class="mc-stat red-stat">
+          <i class="fas fa-circle-xmark"></i>
+          <span>{{ s.missed }} missed</span>
+        </div>
+        <div class="mc-stat muted-stat">
+          <i class="fas fa-calendar"></i>
+          <span>{{ s.total_sessions }} total</span>
+        </div>
+      </div>
+      <div class="mc-bar-wrap">
+        <div class="mc-bar-track">
+          <div class="mc-bar-fill {% if s.percentage >= 75 %}mc-good{% else %}mc-bad{% endif %}"
+               style="width:{{ s.percentage }}%"></div>
+        </div>
+        <span class="mc-pct">{{ s.percentage }}%</span>
+      </div>
+      <div class="mc-link">View details <i class="fas fa-arrow-right"></i></div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Full history table -->
+<div class="section-card">
+  <div class="section-header">
+    <h3><i class="fas fa-clock-rotate-left"></i> Full Attendance Log</h3>
+    <span class="badge badge-green">{{ records|length }} present</span>
+  </div>
+  {% if records %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Course</th>
+        <th>Date</th>
+        <th>Time Marked</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in records %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>
+        <a href="{{ url_for('student.course_detail', course_id=r.session.course.id) }}" class="table-link">
+          <span class="code-badge">{{ r.session.course.course_code }}</span>
+          {{ r.session.course.course_name }}
+        </a>
+      </td>
+      <td>{{ r.session.date.strftime('%d %b %Y') }}</td>
+      <td>{{ r.marked_at.strftime('%I:%M:%S %p') }}</td>
+      <td><i class="fas fa-circle-check" style="color:var(--green);font-size:16px"></i></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-clock-rotate-left"></i>
+    <p>No attendance records yet. Scan a QR code to mark your first attendance!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

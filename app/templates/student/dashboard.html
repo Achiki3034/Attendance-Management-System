@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard | AttendX{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block content %}
+
+<!-- TOP STATS — full width 4-col -->
+<div class="dash-stats-row">
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ summary|length }}</div><div class="stat-label">Enrolled Courses</div></div>
+  </div>
+  <div class="stat-card {% if overall_pct >= 75 %}green{% else %}red{% endif %}">
+    <div class="stat-icon"><i class="fas fa-percent"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ overall_pct }}%</div><div class="stat-label">Overall Attendance</div></div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ total_attended }}</div><div class="stat-label">Classes Attended</div></div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ total_missed }}</div><div class="stat-label">Classes Missed</div></div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+    <div class="stat-info"><div class="stat-value">{{ summary|selectattr('low_attendance')|list|length }}</div><div class="stat-label">At-Risk Courses</div></div>
+  </div>
+</div>
+
+{% if summary|selectattr('low_attendance')|list %}
+<div class="alert-banner">
+  <i class="fas fa-triangle-exclamation"></i>
+  <div>
+    <strong>Attendance Warning!</strong>
+    Your attendance is below 75% in {{ summary|selectattr('low_attendance')|list|length }} course(s).
+    Click any at-risk course below to see details and which classes you missed.
+  </div>
+</div>
+{% endif %}
+
+{% if summary %}
+<!-- MAIN DASHBOARD GRID -->
+<div class="dash-main-grid">
+
+  <!-- LEFT: Course cards -->
+  <div class="dash-courses">
+    <div class="section-card" style="height:100%">
+      <div class="section-header">
+        <h3><i class="fas fa-book-open"></i> My Courses</h3>
+        <a href="{{ url_for('student.history') }}" class="btn-sm">Full History</a>
+      </div>
+      <div class="dash-course-list">
+        {% for s in summary %}
+        <a href="{{ url_for('student.course_detail', course_id=s.course.id) }}" class="dash-course-row {% if s.low_attendance %}dcr-danger{% endif %}">
+          <div class="dcr-left">
+            <div class="dcr-code">{{ s.course.course_code }}</div>
+            <div class="dcr-name">{{ s.course.course_name }}</div>
+            <div class="dcr-dept">{{ s.course.department }}</div>
+          </div>
+          <div class="dcr-right">
+            <div class="dcr-bar-wrap">
+              <div class="dcr-bar-track">
+                <div class="dcr-bar {% if s.percentage >= 75 %}dcr-good{% else %}dcr-bad{% endif %}"
+                     style="width:{{ s.percentage }}%"></div>
+              </div>
+              <span class="dcr-pct {% if s.percentage >= 75 %}dcr-pct-good{% else %}dcr-pct-bad{% endif %}">
+                {{ s.percentage }}%
+              </span>
+            </div>
+            <div class="dcr-meta">
+              <span class="green-text"><i class="fas fa-check"></i> {{ s.attended }}</span>
+              <span class="red-text"><i class="fas fa-times"></i> {{ s.missed }}</span>
+              <span class="muted-text">/ {{ s.total_sessions }}</span>
+            </div>
+            {% if s.low_attendance %}
+            <span class="badge badge-red" style="font-size:10px">At Risk — tap for details</span>
+            {% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Donut chart + recent activity -->
+  <div class="dash-right-col">
+
+    <!-- Donut chart -->
+    <div class="section-card" style="margin-bottom:20px">
+      <div class="section-header"><h3><i class="fas fa-chart-pie"></i> Attendance Overview</h3></div>
+      <div style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <canvas id="overallDonut" width="200" height="200"></canvas>
+        <div class="donut-legend">
+          {% for s in summary %}
+          <div class="dl-item">
+            <span class="dl-dot" style="background:{{ loop.cycle('#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6') }}"></span>
+            <span class="dl-label">{{ s.course.course_code }}: {{ s.percentage }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent attendance -->
+    <div class="section-card">
+      <div class="section-header"><h3><i class="fas fa-clock-rotate-left"></i> Recent Activity</h3></div>
+      {% if recent_records %}
+      <div class="recent-list">
+        {% for r in recent_records %}
+        <div class="recent-item">
+          <div class="ri-icon {% if r.status == 'present' %}ri-green{% endif %}">
+            <i class="fas fa-circle-check"></i>
+          </div>
+          <div class="ri-info">
+            <div class="ri-course">{{ r.session.course.course_code }} – {{ r.session.course.course_name }}</div>
+            <div class="ri-time">{{ r.marked_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:24px">
+        <i class="fas fa-qrcode"></i><p>Scan a QR code to record attendance</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+{% else %}
+<div class="empty-state" style="padding:80px 24px">
+  <i class="fas fa-book"></i>
+  <p>You are not enrolled in any courses yet. Contact your administrator.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+(function() {
+  const ctx = document.getElementById('overallDonut');
+  if (!ctx) return;
+  const labels  = [{% for s in summary %}'{{ s.course.course_code }}'{% if not loop.last %},{% endif %}{% endfor %}];
+  const data    = [{% for s in summary %}{{ s.percentage }}{% if not loop.last %},{% endif %}{% endfor %}];
+  const colors  = ['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6','#06b6d4','#ec4899'];
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors.slice(0, data.length),
+        borderWidth: 3,
+        borderColor: '#fff',
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed}% attendance`
+          }
+        }
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

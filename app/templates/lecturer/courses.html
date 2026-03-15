@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}My Courses | AttendX{% endblock %}
+{% block page_title %}My Courses{% endblock %}
+{% block content %}
+<div class="course-grid">
+  {% for c in courses %}
+  <div class="course-card">
+    <div class="course-code">{{ c.course_code }}</div>
+    <div class="course-name">{{ c.course_name }}</div>
+    <div class="course-meta">{{ c.department }} &bull; {{ c.semester }}</div>
+    <div class="course-stats">
+      <span><i class="fas fa-users"></i> {{ c.enrollments.count() }} students</span>
+      <span><i class="fas fa-calendar"></i> {{ c.get_total_sessions() }} sessions</span>
+    </div>
+    <div class="course-actions">
+      <form method="POST" action="{{ url_for('lecturer.start_session', course_id=c.id) }}">
+        <button type="submit" class="btn-primary full"><i class="fas fa-qrcode"></i> Start Attendance</button>
+      </form>
+      <a href="{{ url_for('lecturer.course_report', course_id=c.id) }}" class="btn-secondary full"><i class="fas fa-chart-bar"></i> Report</a>
+    </div>
+  </div>
+  {% endfor %}
+  {% if not courses %}
+  <div class="empty-state"><i class="fas fa-book"></i><p>No courses assigned yet</p></div>
+  {% endif %}
+</div>
+{% endblock %}
