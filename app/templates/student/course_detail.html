@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ course.course_code }} | AttendX{% endblock %}
+{% block title %}{{ course.course_code }} | CheckinHub{% endblock %}
 {% block page_title %}{{ course.course_code }} – Course Detail{% endblock %}
 {% block content %}
 
@@ -23,13 +23,10 @@
   <div class="cb-right">
     <div class="cb-circle {% if pct >= 75 %}cb-good{% else %}cb-bad{% endif %}">
       <svg viewBox="0 0 100 100" class="circle-svg">
-        <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="10"/>
-        <circle cx="50" cy="50" r="42" fill="none"
-          stroke="{% if pct >= 75 %}#10b981{% else %}#ef4444{% endif %}"
-          stroke-width="10"
-          stroke-dasharray="{{ (pct / 100 * 263.9)|round(1) }} 263.9"
-          stroke-dashoffset="65.97"
-          stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="10" />
+        <circle cx="50" cy="50" r="42" fill="none" stroke="{% if pct >= 75 %}#10b981{% else %}#ef4444{% endif %}"
+          stroke-width="10" stroke-dasharray="{{ (pct / 100 * 263.9)|round(1) }} 263.9" stroke-dashoffset="65.97"
+          stroke-linecap="round" />
       </svg>
       <div class="circle-text">
         <div class="circle-pct">{{ pct }}%</div>
@@ -43,88 +40,115 @@
 <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
   <div class="stat-card blue">
     <div class="stat-icon"><i class="fas fa-calendar"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ total_sessions }}</div><div class="stat-label">Total Sessions</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_sessions }}</div>
+      <div class="stat-label">Total Sessions</div>
+    </div>
   </div>
   <div class="stat-card green">
     <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ attended_count }}</div><div class="stat-label">Attended</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ attended_count }}</div>
+      <div class="stat-label">Attended</div>
+    </div>
   </div>
   <div class="stat-card red">
     <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ missed_count }}</div><div class="stat-label">Missed</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ missed_count }}</div>
+      <div class="stat-label">Missed</div>
+    </div>
   </div>
   <div class="stat-card {% if pct >= 75 %}green{% else %}orange{% endif %}">
     <div class="stat-icon"><i class="fas fa-percent"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ pct }}%</div><div class="stat-label">Rate</div></div>
-  </div>
-</div>
-
-{% if pct < 75 and total_sessions > 0 %}
-<div class="alert-banner" style="margin-bottom:24px">
-  <i class="fas fa-triangle-exclamation"></i>
-  <div>
-    <strong>Low Attendance Warning</strong><br>
-    You need to attend <strong>{{ ((0.75 * total_sessions) - attended_count)|int + 1 }}</strong> more consecutive classes
-    to reach the 75% minimum requirement.
-  </div>
-</div>
-{% endif %}
-
-<!-- Two column: attended + missed -->
-<div class="detail-grid">
-
-  <div class="section-card">
-    <div class="section-header">
-      <h3><i class="fas fa-circle-check" style="color:var(--green)"></i> Classes Attended ({{ attended_count }})</h3>
+    <div class="stat-info">
+      <div class="stat-value">{{ pct }}%</div>
+      <div class="stat-label">Rate</div>
     </div>
-    {% if attended_sessions %}
-    <table class="data-table">
-      <thead><tr><th>#</th><th>Date</th><th>Time Marked</th></tr></thead>
-      <tbody>
-      {% for s in attended_sessions %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ s.date.strftime('%d %b %Y') }}</td>
-        <td>
-          {% for r in s.records %}
-            {% if r.student_id == current_user.id %}
+  </div>
+</div>
+
+{% if pct < 75 and total_sessions> 0 %}
+  <div class="alert-banner" style="margin-bottom:24px">
+    <i class="fas fa-triangle-exclamation"></i>
+    <div>
+      <strong>Low Attendance Warning</strong><br>
+      You need to attend <strong>{{ ((0.75 * total_sessions) - attended_count)|int + 1 }}</strong> more consecutive
+      classes
+      to reach the 75% minimum requirement.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Two column: attended + missed -->
+  <div class="detail-grid">
+
+    <div class="section-card">
+      <div class="section-header">
+        <h3><i class="fas fa-circle-check" style="color:var(--green)"></i> Classes Attended ({{ attended_count }})</h3>
+      </div>
+      {% if attended_sessions %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Time Marked</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in attended_sessions %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ s.date.strftime('%d %b %Y') }}</td>
+            <td>
+              {% for r in s.records %}
+              {% if r.student_id == current_user.id %}
               {{ r.marked_at.strftime('%I:%M:%S %p') }}
-            {% endif %}
+              {% endif %}
+              {% endfor %}
+            </td>
+          </tr>
           {% endfor %}
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="empty-state"><i class="fas fa-calendar-xmark"></i><p>No sessions attended yet</p></div>
-    {% endif %}
-  </div>
-
-  <div class="section-card">
-    <div class="section-header">
-      <h3><i class="fas fa-circle-xmark" style="color:var(--red)"></i> Classes Missed ({{ missed_count }})</h3>
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-calendar-xmark"></i>
+        <p>No sessions attended yet</p>
+      </div>
+      {% endif %}
     </div>
-    {% if missed_sessions %}
-    <table class="data-table">
-      <thead><tr><th>#</th><th>Date</th><th>Status</th></tr></thead>
-      <tbody>
-      {% for s in missed_sessions %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ s.date.strftime('%d %b %Y') }}</td>
-        <td><i class="fas fa-circle-xmark" style="color:var(--red);font-size:16px"></i></td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="empty-state" style="padding:32px">
-      <i class="fas fa-party-horn" style="color:var(--green);opacity:.7"></i>
-      <p>Perfect attendance! No missed classes.</p>
-    </div>
-    {% endif %}
-  </div>
 
-</div>
-{% endblock %}
+    <div class="section-card">
+      <div class="section-header">
+        <h3><i class="fas fa-circle-xmark" style="color:var(--red)"></i> Classes Missed ({{ missed_count }})</h3>
+      </div>
+      {% if missed_sessions %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in missed_sessions %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ s.date.strftime('%d %b %Y') }}</td>
+            <td><i class="fas fa-circle-xmark" style="color:var(--red);font-size:16px"></i></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state" style="padding:32px">
+        <i class="fas fa-party-horn" style="color:var(--green);opacity:.7"></i>
+        <p>Perfect attendance! No missed classes.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endblock %}

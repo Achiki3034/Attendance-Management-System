@@ -12,32 +12,48 @@
 
   <div class="stat-card green">
     <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ total_attended }}</div><div class="stat-label">Classes Attended</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_attended }}</div>
+      <div class="stat-label">Classes Attended</div>
+    </div>
   </div>
   <div class="stat-card red">
     <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ total_missed }}</div><div class="stat-label">Classes Missed</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_missed }}</div>
+      <div class="stat-label">Classes Missed</div>
+    </div>
   </div>
   <div class="stat-card blue">
     <div class="stat-icon"><i class="fas fa-calendar"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ total_all.val }}</div><div class="stat-label">Total Sessions</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_all.val }}</div>
+      <div class="stat-label">Total Sessions</div>
+    </div>
   </div>
   <div class="stat-card {% if overall_pct >= 75 %}green{% else %}orange{% endif %}">
     <div class="stat-icon"><i class="fas fa-percent"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ overall_pct }}%</div><div class="stat-label">Overall Rate</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ overall_pct }}%</div>
+      <div class="stat-label">Overall Rate</div>
+    </div>
   </div>
 </div>
 
 <!-- Per-course missed breakdown -->
 {% if summary %}
 <div class="section-card" style="margin-bottom:24px">
-  <div class="section-header"><h3><i class="fas fa-chart-bar"></i> Missed Classes Per Course</h3></div>
+  <div class="section-header">
+    <h3><i class="fas fa-chart-bar"></i> Missed Classes Per Course</h3>
+  </div>
   <div style="padding:16px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
     {% for s in summary %}
-    <a href="{{ url_for('student.course_detail', course_id=s.course.id) }}" class="missed-course-card {% if s.low_attendance %}missed-danger{% endif %}">
+    <a href="{{ url_for('student.course_detail', course_id=s.course.id) }}"
+      class="missed-course-card {% if s.low_attendance %}missed-danger{% endif %}">
       <div class="mc-top">
         <span class="mc-code">{{ s.course.course_code }}</span>
-        {% if s.low_attendance %}<span class="badge badge-red">At Risk</span>{% else %}<span class="badge badge-green">Good</span>{% endif %}
+        {% if s.low_attendance %}<span class="badge badge-red">At Risk</span>{% else %}<span
+          class="badge badge-green">Good</span>{% endif %}
       </div>
       <div class="mc-name">{{ s.course.course_name }}</div>
       <div class="mc-stats">
@@ -57,7 +73,7 @@
       <div class="mc-bar-wrap">
         <div class="mc-bar-track">
           <div class="mc-bar-fill {% if s.percentage >= 75 %}mc-good{% else %}mc-bad{% endif %}"
-               style="width:{{ s.percentage }}%"></div>
+            style="width:{{ s.percentage }}%"></div>
         </div>
         <span class="mc-pct">{{ s.percentage }}%</span>
       </div>
@@ -86,20 +102,20 @@
       </tr>
     </thead>
     <tbody>
-    {% for r in records %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td>
-        <a href="{{ url_for('student.course_detail', course_id=r.session.course.id) }}" class="table-link">
-          <span class="code-badge">{{ r.session.course.course_code }}</span>
-          {{ r.session.course.course_name }}
-        </a>
-      </td>
-      <td>{{ r.session.date.strftime('%d %b %Y') }}</td>
-      <td>{{ r.marked_at.strftime('%I:%M:%S %p') }}</td>
-      <td><i class="fas fa-circle-check" style="color:var(--green);font-size:16px"></i></td>
-    </tr>
-    {% endfor %}
+      {% for r in records %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>
+          <a href="{{ url_for('student.course_detail', course_id=r.session.course.id) }}" class="table-link">
+            <span class="code-badge">{{ r.session.course.course_code }}</span>
+            {{ r.session.course.course_name }}
+          </a>
+        </td>
+        <td>{{ r.session.date.strftime('%d %b %Y') }}</td>
+        <td>{{ r.marked_at.strftime('%I:%M:%S %p') }}</td>
+        <td><i class="fas fa-circle-check" style="color:var(--green);font-size:16px"></i></td>
+      </tr>
+      {% endfor %}
     </tbody>
   </table>
   {% else %}

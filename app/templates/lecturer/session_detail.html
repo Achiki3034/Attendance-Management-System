@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
-{% block title %}Session | AttendX{% endblock %}
+{% block title %}Session | CheckinHub{% endblock %}
 {% block page_title %}Attendance Session – {{ session.course.course_code }}{% endblock %}
 {% block content %}
 <div class="session-layout">
   <div class="qr-panel">
     <div class="section-card">
-      <div class="section-header"><h3><i class="fas fa-qrcode"></i> QR Code</h3></div>
+      <div class="section-header">
+        <h3><i class="fas fa-qrcode"></i> QR Code</h3>
+      </div>
       {% if session.qr_code_path %}
       <div class="qr-wrapper">
-        <img src="{{ url_for('static', filename='qr_codes/' + session.qr_code_path) }}" alt="QR Code" class="qr-image" />
+        <img src="{{ url_for('static', filename='qr_codes/' + session.qr_code_path) }}" alt="QR Code"
+          class="qr-image" />
       </div>
       {% endif %}
       <div class="qr-url">
@@ -20,7 +23,8 @@
         <p><i class="fas fa-users"></i> {{ enrolled_count }} students enrolled</p>
       </div>
       {% if session.is_active %}
-      <form method="POST" action="{{ url_for('lecturer.close_session', session_id=session.id) }}" onsubmit="return confirm('Close this session? Students will no longer be able to mark attendance.')">
+      <form method="POST" action="{{ url_for('lecturer.close_session', session_id=session.id) }}"
+        onsubmit="return confirm('Close this session? Students will no longer be able to mark attendance.')">
         <button type="submit" class="btn-secondary full"><i class="fas fa-stop-circle"></i> Close Session</button>
       </form>
       {% else %}
@@ -36,20 +40,33 @@
       </div>
       {% if records %}
       <table class="data-table">
-        <thead><tr><th>#</th><th>Name</th><th>Student ID</th><th>Time Marked</th></tr></thead>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Student ID</th>
+            <th>Time Marked</th>
+          </tr>
+        </thead>
         <tbody>
-        {% for r in records %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td><div class="user-cell"><div class="mini-avatar">{{ r.student.full_name[0] }}</div>{{ r.student.full_name }}</div></td>
-          <td>{{ r.student.student_id or '—' }}</td>
-          <td>{{ r.marked_at.strftime('%I:%M:%S %p') }}</td>
-        </tr>
-        {% endfor %}
+          {% for r in records %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+              <div class="user-cell">
+                <div class="mini-avatar">{{ r.student.full_name[0] }}</div>{{ r.student.full_name }}
+              </div>
+            </td>
+            <td>{{ r.student.student_id or '—' }}</td>
+            <td>{{ r.marked_at.strftime('%I:%M:%S %p') }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
       </table>
       {% else %}
-      <div class="empty-state"><i class="fas fa-qrcode"></i><p>Waiting for students to scan QR code...</p></div>
+      <div class="empty-state"><i class="fas fa-qrcode"></i>
+        <p>Waiting for students to scan QR code...</p>
+      </div>
       {% endif %}
     </div>
   </div>

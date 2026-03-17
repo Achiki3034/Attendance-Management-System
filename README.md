@@ -1,4 +1,4 @@
-# AttendX — Digital Attendance Management System
+# CheckinHub — Digital Attendance Management System
 
 A full-featured university attendance system built with Flask.
 

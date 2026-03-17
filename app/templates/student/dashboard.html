@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}My Dashboard | AttendX{% endblock %}
+{% block title %}My Dashboard | CheckinHub{% endblock %}
 {% block page_title %}My Dashboard{% endblock %}
 {% block content %}
 
@@ -7,23 +7,38 @@
 <div class="dash-stats-row">
   <div class="stat-card blue">
     <div class="stat-icon"><i class="fas fa-book-open"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ summary|length }}</div><div class="stat-label">Enrolled Courses</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ summary|length }}</div>
+      <div class="stat-label">Enrolled Courses</div>
+    </div>
   </div>
   <div class="stat-card {% if overall_pct >= 75 %}green{% else %}red{% endif %}">
     <div class="stat-icon"><i class="fas fa-percent"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ overall_pct }}%</div><div class="stat-label">Overall Attendance</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ overall_pct }}%</div>
+      <div class="stat-label">Overall Attendance</div>
+    </div>
   </div>
   <div class="stat-card green">
     <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ total_attended }}</div><div class="stat-label">Classes Attended</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_attended }}</div>
+      <div class="stat-label">Classes Attended</div>
+    </div>
   </div>
   <div class="stat-card red">
     <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ total_missed }}</div><div class="stat-label">Classes Missed</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_missed }}</div>
+      <div class="stat-label">Classes Missed</div>
+    </div>
   </div>
   <div class="stat-card orange">
     <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
-    <div class="stat-info"><div class="stat-value">{{ summary|selectattr('low_attendance')|list|length }}</div><div class="stat-label">At-Risk Courses</div></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ summary|selectattr('low_attendance')|list|length }}</div>
+      <div class="stat-label">At-Risk Courses</div>
+    </div>
   </div>
 </div>
 
@@ -51,7 +66,8 @@
       </div>
       <div class="dash-course-list">
         {% for s in summary %}
-        <a href="{{ url_for('student.course_detail', course_id=s.course.id) }}" class="dash-course-row {% if s.low_attendance %}dcr-danger{% endif %}">
+        <a href="{{ url_for('student.course_detail', course_id=s.course.id) }}"
+          class="dash-course-row {% if s.low_attendance %}dcr-danger{% endif %}">
           <div class="dcr-left">
             <div class="dcr-code">{{ s.course.course_code }}</div>
             <div class="dcr-name">{{ s.course.course_name }}</div>
@@ -61,7 +77,7 @@
             <div class="dcr-bar-wrap">
               <div class="dcr-bar-track">
                 <div class="dcr-bar {% if s.percentage >= 75 %}dcr-good{% else %}dcr-bad{% endif %}"
-                     style="width:{{ s.percentage }}%"></div>
+                  style="width:{{ s.percentage }}%"></div>
               </div>
               <span class="dcr-pct {% if s.percentage >= 75 %}dcr-pct-good{% else %}dcr-pct-bad{% endif %}">
                 {{ s.percentage }}%
@@ -87,13 +103,16 @@
 
     <!-- Donut chart -->
     <div class="section-card" style="margin-bottom:20px">
-      <div class="section-header"><h3><i class="fas fa-chart-pie"></i> Attendance Overview</h3></div>
+      <div class="section-header">
+        <h3><i class="fas fa-chart-pie"></i> Attendance Overview</h3>
+      </div>
       <div style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px">
         <canvas id="overallDonut" width="200" height="200"></canvas>
         <div class="donut-legend">
           {% for s in summary %}
           <div class="dl-item">
-            <span class="dl-dot" style="background:{{ loop.cycle('#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6') }}"></span>
+            <span class="dl-dot"
+              style="background:{{ loop.cycle('#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6') }}"></span>
             <span class="dl-label">{{ s.course.course_code }}: {{ s.percentage }}%</span>
           </div>
           {% endfor %}
@@ -103,7 +122,9 @@
 
     <!-- Recent attendance -->
     <div class="section-card">
-      <div class="section-header"><h3><i class="fas fa-clock-rotate-left"></i> Recent Activity</h3></div>
+      <div class="section-header">
+        <h3><i class="fas fa-clock-rotate-left"></i> Recent Activity</h3>
+      </div>
       {% if recent_records %}
       <div class="recent-list">
         {% for r in recent_records %}
@@ -120,7 +141,8 @@
       </div>
       {% else %}
       <div class="empty-state" style="padding:24px">
-        <i class="fas fa-qrcode"></i><p>Scan a QR code to record attendance</p>
+        <i class="fas fa-qrcode"></i>
+        <p>Scan a QR code to record attendance</p>
       </div>
       {% endif %}
     </div>
@@ -139,12 +161,12 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-(function() {
-  const ctx = document.getElementById('overallDonut');
-  if (!ctx) return;
-  const labels  = [{% for s in summary %}'{{ s.course.course_code }}'{% if not loop.last %},{% endif %}{% endfor %}];
-  const data    = [{% for s in summary %}{{ s.percentage }}{% if not loop.last %},{% endif %}{% endfor %}];
-  const colors  = ['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6','#06b6d4','#ec4899'];
+  (function () {
+    const ctx = document.getElementById('overallDonut');
+    if (!ctx) return;
+    const labels = [{% for s in summary %}'{{ s.course.course_code }}'{% if not loop.last %}, {% endif %} {% endfor %}];
+  const data = [{% for s in summary %}{ { s.percentage } } {% if not loop.last %}, {% endif %} {% endfor %}];
+  const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#06b6d4', '#ec4899'];
   new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -169,6 +191,6 @@
       }
     }
   });
-})();
+}) ();
 </script>
 {% endblock %}

@@ -1,30 +1,50 @@
 {% extends 'base.html' %}
-{% block title %}Courses | AttendX{% endblock %}
+{% block title %}Courses | CheckinHub{% endblock %}
 {% block page_title %}Course Management{% endblock %}
 {% block content %}
 <div class="page-actions">
   <a href="{{ url_for('admin.create_course') }}" class="btn-primary"><i class="fas fa-plus"></i> Add New Course</a>
 </div>
 <div class="section-card">
-  <div class="section-header"><h3><i class="fas fa-book-open"></i> All Courses ({{ courses|length }})</h3></div>
+  <div class="section-header">
+    <h3><i class="fas fa-book-open"></i> All Courses ({{ courses|length }})</h3>
+  </div>
   {% if courses %}
   <table class="data-table">
-    <thead><tr><th>Code</th><th>Course Name</th><th>Department</th><th>Semester</th><th>Lecturer</th><th>Sessions</th><th>Report</th><th>Action</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Course Name</th>
+        <th>Department</th>
+        <th>Semester</th>
+        <th>Lecturer</th>
+        <th>Sessions</th>
+        <th>Report</th>
+        <th>Action</th>
+      </tr>
+    </thead>
     <tbody>
-    {% for c in courses %}
-    <tr>
-      <td><span class="code-badge">{{ c.course_code }}</span></td>
-      <td>{{ c.course_name }}</td>
-      <td>{{ c.department }}</td>
-      <td>{{ c.semester }}</td>
-      <td>{{ c.lecturer.full_name if c.lecturer else '—' }}</td>
-      <td>{{ c.get_total_sessions() }}</td>
-      <td><a href="{{ url_for('admin.course_report', course_id=c.id) }}" class="btn-sm" title="View Report"><i class="fas fa-chart-bar"></i></a></td>
-      <td><form method="POST" action="{{ url_for('admin.delete_course', course_id=c.id) }}" onsubmit="return confirm('Delete course?')"><button type="submit" class="btn-danger-sm"><i class="fas fa-trash"></i></button></form></td>
-    </tr>
-    {% endfor %}
+      {% for c in courses %}
+      <tr>
+        <td><span class="code-badge">{{ c.course_code }}</span></td>
+        <td>{{ c.course_name }}</td>
+        <td>{{ c.department }}</td>
+        <td>{{ c.semester }}</td>
+        <td>{{ c.lecturer.full_name if c.lecturer else '—' }}</td>
+        <td>{{ c.get_total_sessions() }}</td>
+        <td><a href="{{ url_for('admin.course_report', course_id=c.id) }}" class="btn-sm" title="View Report"><i
+              class="fas fa-chart-bar"></i></a></td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.delete_course', course_id=c.id) }}"
+            onsubmit="return confirm('Delete course?')"><button type="submit" class="btn-danger-sm"><i
+                class="fas fa-trash"></i></button></form>
+        </td>
+      </tr>
+      {% endfor %}
     </tbody>
   </table>
-  {% else %}<div class="empty-state"><i class="fas fa-book-open"></i><p>No courses created yet</p></div>{% endif %}
+  {% else %}<div class="empty-state"><i class="fas fa-book-open"></i>
+    <p>No courses created yet</p>
+  </div>{% endif %}
 </div>
 {% endblock %}

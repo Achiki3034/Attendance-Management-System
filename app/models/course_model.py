@@ -12,9 +12,19 @@ class Course(db.Model):
     lecturer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
-    enrollments = db.relationship('Enrollment', backref='course', lazy='dynamic')
-    sessions = db.relationship('AttendanceSession', backref='course', lazy='dynamic')
+    # Relationships with cascade delete
+    enrollments = db.relationship(
+        'Enrollment',
+        backref='course',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
+    sessions = db.relationship(
+        'AttendanceSession',
+        backref='course',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
     def get_total_sessions(self):
         return self.sessions.count()

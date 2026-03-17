@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}My Profile | AttendX{% endblock %}
+{% block title %}My Profile | CheckinHub{% endblock %}
 {% block page_title %}My Profile{% endblock %}
 {% block content %}
 
@@ -12,8 +12,8 @@
     <div class="profile-avatar-card">
       <div class="avatar-wrapper" id="avatarWrapper">
         {% if current_user.profile_picture %}
-        <img src="{{ url_for('static', filename='avatars/' + current_user.profile_picture) }}"
-             alt="Profile" class="avatar-img" id="avatarPreview" />
+        <img src="{{ url_for('static', filename='avatars/' + current_user.profile_picture) }}" alt="Profile"
+          class="avatar-img" id="avatarPreview" />
         {% else %}
         <div class="avatar-initials" id="avatarInitials">
           {{ current_user.full_name[0].upper() }}
@@ -68,7 +68,7 @@
         <div class="pcl-right">
           <div class="mini-progress">
             <div class="mini-bar {% if s.percentage >= 75 %}mp-good{% else %}mp-bad{% endif %}"
-                 style="width:{{ s.percentage }}%"></div>
+              style="width:{{ s.percentage }}%"></div>
           </div>
           <span class="pcl-pct {% if s.percentage >= 75 %}good{% else %}bad{% endif %}">
             {{ s.percentage }}%
@@ -96,52 +96,43 @@
 
     <!-- TAB: Edit Profile -->
     <div class="ptab-content active" id="tab-edit">
-      <form method="POST"
-            action="{{ url_for('student.update_profile') }}"
-            enctype="multipart/form-data"
-            id="profileForm">
+      <form method="POST" action="{{ url_for('student.update_profile') }}" enctype="multipart/form-data"
+        id="profileForm">
 
         <!-- Hidden file input triggered by camera icon -->
-        <input type="file" name="profile_picture" id="profilePicInput"
-               accept="image/*" style="display:none" />
+        <input type="file" name="profile_picture" id="profilePicInput" accept="image/*" style="display:none" />
 
         <div class="profile-form-grid">
 
           <div class="form-group">
             <label><i class="fas fa-user"></i> Full Name</label>
-            <input type="text" name="full_name" class="form-control"
-                   value="{{ current_user.full_name }}" required />
+            <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" required />
           </div>
 
           <div class="form-group">
             <label><i class="fas fa-id-card"></i> Student ID</label>
-            <input type="text" class="form-control"
-                   value="{{ current_user.student_id or '' }}"
-                   disabled
-                   title="Student ID can only be changed by admin" />
+            <input type="text" class="form-control" value="{{ current_user.student_id or '' }}" disabled
+              title="Student ID can only be changed by admin" />
             <small>Contact admin to update your Student ID</small>
           </div>
 
           <div class="form-group">
             <label><i class="fas fa-envelope"></i> Email Address</label>
-            <input type="email" class="form-control"
-                   value="{{ current_user.email }}"
-                   disabled
-                   title="Email can only be changed by admin" />
+            <input type="email" class="form-control" value="{{ current_user.email }}" disabled
+              title="Email can only be changed by admin" />
             <small>Contact admin to update your email</small>
           </div>
 
           <div class="form-group">
             <label><i class="fas fa-phone"></i> Phone Number</label>
-            <input type="text" name="phone" class="form-control"
-                   value="{{ current_user.phone or '' }}"
-                   placeholder="+254 700 000 000" />
+            <input type="text" name="phone" class="form-control" value="{{ current_user.phone or '' }}"
+              placeholder="+254 700 000 000" />
           </div>
 
           <div class="form-group full-width">
             <label><i class="fas fa-quote-left"></i> Bio / About Me</label>
             <textarea name="bio" class="form-control" rows="3"
-                      placeholder="Tell us a little about yourself...">{{ current_user.bio or '' }}</textarea>
+              placeholder="Tell us a little about yourself...">{{ current_user.bio or '' }}</textarea>
           </div>
 
         </div>
@@ -169,8 +160,8 @@
           <div class="form-group">
             <label><i class="fas fa-lock"></i> Current Password</label>
             <div class="pw-input-wrap">
-              <input type="password" name="current_password" id="currentPw"
-                     class="form-control" placeholder="Enter current password" required />
+              <input type="password" name="current_password" id="currentPw" class="form-control"
+                placeholder="Enter current password" required />
               <button type="button" class="pw-toggle" data-target="currentPw">
                 <i class="fas fa-eye"></i>
               </button>
@@ -180,8 +171,8 @@
           <div class="form-group">
             <label><i class="fas fa-lock"></i> New Password</label>
             <div class="pw-input-wrap">
-              <input type="password" name="new_password" id="newPw"
-                     class="form-control" placeholder="Enter new password" required />
+              <input type="password" name="new_password" id="newPw" class="form-control"
+                placeholder="Enter new password" required />
               <button type="button" class="pw-toggle" data-target="newPw">
                 <i class="fas fa-eye"></i>
               </button>
@@ -191,8 +182,8 @@
           <div class="form-group">
             <label><i class="fas fa-lock"></i> Confirm New Password</label>
             <div class="pw-input-wrap">
-              <input type="password" name="confirm_password" id="confirmPw"
-                     class="form-control" placeholder="Repeat new password" required />
+              <input type="password" name="confirm_password" id="confirmPw" class="form-control"
+                placeholder="Repeat new password" required />
               <button type="button" class="pw-toggle" data-target="confirmPw">
                 <i class="fas fa-eye"></i>
               </button>
@@ -227,78 +218,78 @@
 
 {% block extra_js %}
 <script>
-// ── Tab switching
-document.querySelectorAll('.ptab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.ptab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  // ── Tab switching
+  document.querySelectorAll('.ptab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.ptab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
   });
-});
 
-// ── Avatar preview before upload
-document.getElementById('profilePicInput').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const wrapper = document.getElementById('avatarWrapper');
-    let img = document.getElementById('avatarPreview');
-    let initials = document.getElementById('avatarInitials');
-    if (!img) {
-      img = document.createElement('img');
-      img.id = 'avatarPreview';
-      img.className = 'avatar-img';
-      if (initials) initials.remove();
-      wrapper.prepend(img);
-    }
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-  // auto-submit the form so picture saves immediately
-  document.getElementById('profileForm').submit();
-});
-
-// ── Password show/hide toggle
-document.querySelectorAll('.pw-toggle').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const input = document.getElementById(btn.dataset.target);
-    const icon  = btn.querySelector('i');
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.className = 'fas fa-eye-slash';
-    } else {
-      input.type = 'password';
-      icon.className = 'fas fa-eye';
-    }
+  // ── Avatar preview before upload
+  document.getElementById('profilePicInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrapper = document.getElementById('avatarWrapper');
+      let img = document.getElementById('avatarPreview');
+      let initials = document.getElementById('avatarInitials');
+      if (!img) {
+        img = document.createElement('img');
+        img.id = 'avatarPreview';
+        img.className = 'avatar-img';
+        if (initials) initials.remove();
+        wrapper.prepend(img);
+      }
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    // auto-submit the form so picture saves immediately
+    document.getElementById('profileForm').submit();
   });
-});
 
-// ── Password strength meter
-document.getElementById('newPw').addEventListener('input', function() {
-  const val   = this.value;
-  const fill  = document.getElementById('strengthFill');
-  const label = document.getElementById('strengthLabel');
-  let score   = 0;
-  if (val.length >= 6)  score++;
-  if (val.length >= 10) score++;
-  if (/[A-Z]/.test(val)) score++;
-  if (/[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
-  const levels = [
-    { w:'0%',   color:'#e2e8f0', text:'Enter a password' },
-    { w:'20%',  color:'#ef4444', text:'Very weak' },
-    { w:'40%',  color:'#f97316', text:'Weak' },
-    { w:'60%',  color:'#eab308', text:'Fair' },
-    { w:'80%',  color:'#22c55e', text:'Strong' },
-    { w:'100%', color:'#10b981', text:'Very strong' },
-  ];
-  const lvl = levels[score] || levels[0];
-  fill.style.width       = lvl.w;
-  fill.style.background  = lvl.color;
-  label.textContent      = lvl.text;
-  label.style.color      = lvl.color;
-});
+  // ── Password show/hide toggle
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    });
+  });
+
+  // ── Password strength meter
+  document.getElementById('newPw').addEventListener('input', function () {
+    const val = this.value;
+    const fill = document.getElementById('strengthFill');
+    const label = document.getElementById('strengthLabel');
+    let score = 0;
+    if (val.length >= 6) score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { w: '0%', color: '#e2e8f0', text: 'Enter a password' },
+      { w: '20%', color: '#ef4444', text: 'Very weak' },
+      { w: '40%', color: '#f97316', text: 'Weak' },
+      { w: '60%', color: '#eab308', text: 'Fair' },
+      { w: '80%', color: '#22c55e', text: 'Strong' },
+      { w: '100%', color: '#10b981', text: 'Very strong' },
+    ];
+    const lvl = levels[score] || levels[0];
+    fill.style.width = lvl.w;
+    fill.style.background = lvl.color;
+    label.textContent = lvl.text;
+    label.style.color = lvl.color;
+  });
 </script>
 {% endblock %}

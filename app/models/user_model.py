@@ -21,10 +21,28 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(30), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
-    enrollments = db.relationship('Enrollment', backref='student', lazy='dynamic', foreign_keys='Enrollment.student_id')
-    courses_teaching = db.relationship('Course', backref='lecturer', lazy='dynamic', foreign_keys='Course.lecturer_id')
-    attendance_records = db.relationship('AttendanceRecord', backref='student', lazy='dynamic')
+    # Relationships with cascade delete
+    enrollments = db.relationship(
+        'Enrollment',
+        backref='student',
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        foreign_keys='Enrollment.student_id'
+    )
+
+    attendance_records = db.relationship(
+        'AttendanceRecord',
+        backref='student',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
+
+    courses_teaching = db.relationship(
+        'Course',
+        backref='lecturer',
+        lazy='dynamic',
+        foreign_keys='Course.lecturer_id'
+    )
 
     def __repr__(self):
         return f'<User {self.email} ({self.role})>'
