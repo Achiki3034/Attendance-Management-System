@@ -165,7 +165,7 @@
     const ctx = document.getElementById('overallDonut');
     if (!ctx) return;
     const labels = [{% for s in summary %}'{{ s.course.course_code }}'{% if not loop.last %}, {% endif %} {% endfor %}];
-  const data = [{% for s in summary %}{ { s.percentage } } {% if not loop.last %}, {% endif %} {% endfor %}];
+  const data = [{% for s in summary %}{{ s.percentage }}{% if not loop.last %}, {% endif %}{% endfor %}];
   const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#06b6d4', '#ec4899'];
   new Chart(ctx, {
     type: 'doughnut',
