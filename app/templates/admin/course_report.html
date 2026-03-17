@@ -167,7 +167,7 @@
 
   // ── Chart data from Jinja
   const studentNames = [{% for r in report %}'{{ r.student.full_name.split()[0] }}'{% if not loop.last %}, {% endif %} {% endfor %}];
-  const percentages = [{% for r in report %}{ { r.percentage } } {% if not loop.last %}, {% endif %} {% endfor %}];
+  const percentages = [{% for r in report %}{{ r.percentage }}{% if not loop.last %}, {% endif %}{% endfor %}];
   const passCount = {{ report| rejectattr('defaulter') | list | length }};
   const failCount = {{ report| selectattr('defaulter') | list | length }};
 
