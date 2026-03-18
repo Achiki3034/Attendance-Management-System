@@ -1,5 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+# app/routes/lecturer_routes.py
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from app.models.attendance_model import AttendanceSession, AttendanceRecord
 from app.models.course_model import Course
@@ -7,23 +10,16 @@ from app.models.enrollment_model import Enrollment
 from app.services.qr_service import generate_qr_code
 from app.services.attendance_service import get_course_attendance_report
 from app.utils.helpers import role_required
-import socket
-
+import os
 
 lecturer_bp = Blueprint('lecturer', __name__)
 
+ALLOWED_EXTENSIONS_L = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('8.8.8.8', 80))
-        return s.getsockname()[0]
-    except Exception:
-        return '127.0.0.1'
-    finally:
-        s.close()
+def allowed_file_l(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_L
 
-
+# ── DASHBOARD ─────────────────────────────────────────────────────────────────
 @lecturer_bp.route('/dashboard')
 @login_required
 @role_required('lecturer')
@@ -35,9 +31,11 @@ def dashboard():
         lecturer_id=current_user.id).order_by(
         AttendanceSession.start_time.desc()).limit(5).all()
     return render_template('lecturer/dashboard.html',
-        courses=courses, active_sessions=active_sessions, recent_sessions=recent_sessions)
+                           courses=courses,
+                           active_sessions=active_sessions,
+                           recent_sessions=recent_sessions)
 
-
+# ── COURSES ───────────────────────────────────────────────────────────────────
 @lecturer_bp.route('/courses')
 @login_required
 @role_required('lecturer')
@@ -45,7 +43,7 @@ def courses():
     courses = Course.query.filter_by(lecturer_id=current_user.id).all()
     return render_template('lecturer/courses.html', courses=courses)
 
-
+# ── START SESSION ─────────────────────────────────────────────────────────────
 @lecturer_bp.route('/session/start/<int:course_id>', methods=['POST'])
 @login_required
 @role_required('lecturer')
@@ -61,20 +59,20 @@ def start_session(course_id):
         flash('An active session already exists for this course.', 'warning')
         return redirect(url_for('lecturer.session_detail', session_id=existing.id))
 
+    # Create a new attendance session
     session = AttendanceSession(course_id=course_id, lecturer_id=current_user.id)
     db.session.add(session)
-    db.session.flush()
+    db.session.flush()  # generate session_token before commit
 
-    base_url = f"http://{get_local_ip()}:5000"
-    filename = generate_qr_code(session.session_token, base_url)
-
+    # Generate QR code using Railway URL
+    filename = generate_qr_code(session.session_token)
     session.qr_code_path = filename
     db.session.commit()
 
     flash(f'Attendance session started for {course.course_name}.', 'success')
     return redirect(url_for('lecturer.session_detail', session_id=session.id))
 
-
+# ── SESSION DETAILS ──────────────────────────────────────────────────────────
 @lecturer_bp.route('/session/<int:session_id>')
 @login_required
 @role_required('lecturer')
@@ -83,9 +81,11 @@ def session_detail(session_id):
     records = AttendanceRecord.query.filter_by(session_id=session_id).all()
     enrolled_count = Enrollment.query.filter_by(course_id=session.course_id).count()
     return render_template('lecturer/session_detail.html',
-        session=session, records=records, enrolled_count=enrolled_count)
+                           session=session,
+                           records=records,
+                           enrolled_count=enrolled_count)
 
-
+# ── CLOSE SESSION ────────────────────────────────────────────────────────────
 @lecturer_bp.route('/session/close/<int:session_id>', methods=['POST'])
 @login_required
 @role_required('lecturer')
@@ -99,7 +99,7 @@ def close_session(session_id):
     flash('Session closed successfully.', 'success')
     return redirect(url_for('lecturer.dashboard'))
 
-
+# ── COURSE REPORT ────────────────────────────────────────────────────────────
 @lecturer_bp.route('/reports/<int:course_id>')
 @login_required
 @role_required('lecturer')
@@ -109,33 +109,24 @@ def course_report(course_id):
         flash('Unauthorized.', 'danger')
         return redirect(url_for('lecturer.dashboard'))
     return render_template('lecturer/course_report.html',
-        course=course, sessions=sessions, report=report)
+                           course=course,
+                           sessions=sessions,
+                           report=report)
 
-# ── LECTURER PROFILE ───────────────────────────────────────────────────────────
-import os
-from flask import current_app
-from werkzeug.utils import secure_filename
-from werkzeug.security import check_password_hash, generate_password_hash
-
-ALLOWED_EXTENSIONS_L = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
-def allowed_file_l(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_L
-
+# ── PROFILE ──────────────────────────────────────────────────────────────────
 @lecturer_bp.route('/profile')
 @login_required
 @role_required('lecturer')
 def profile():
-    from app.models.attendance_model import AttendanceSession, AttendanceRecord
-    courses        = Course.query.filter_by(lecturer_id=current_user.id).all()
+    courses = Course.query.filter_by(lecturer_id=current_user.id).all()
     total_sessions = AttendanceSession.query.filter_by(lecturer_id=current_user.id).count()
     total_students = sum(
         Enrollment.query.filter_by(course_id=c.id).count() for c in courses
     )
     return render_template('lecturer/profile.html',
-        courses=courses,
-        total_sessions=total_sessions,
-        total_students=total_students)
+                           courses=courses,
+                           total_sessions=total_sessions,
+                           total_students=total_students)
 
 @lecturer_bp.route('/profile/update', methods=['POST'])
 @login_required
@@ -150,6 +141,7 @@ def update_profile():
     current_user.full_name = full_name
     current_user.phone     = phone
     current_user.bio       = bio
+
     if 'profile_picture' in request.files:
         file = request.files['profile_picture']
         if file and file.filename != '' and allowed_file_l(file.filename):
@@ -158,6 +150,7 @@ def update_profile():
             os.makedirs(upload_dir, exist_ok=True)
             file.save(os.path.join(upload_dir, filename))
             current_user.profile_picture = filename
+
     db.session.commit()
     flash('Profile updated successfully!', 'success')
     return redirect(url_for('lecturer.profile'))
@@ -169,6 +162,7 @@ def change_password():
     current_pw = request.form.get('current_password', '')
     new_pw     = request.form.get('new_password', '')
     confirm_pw = request.form.get('confirm_password', '')
+
     if not check_password_hash(current_user.password_hash, current_pw):
         flash('Current password is incorrect.', 'danger')
         return redirect(url_for('lecturer.profile'))
@@ -178,6 +172,7 @@ def change_password():
     if new_pw != confirm_pw:
         flash('New passwords do not match.', 'danger')
         return redirect(url_for('lecturer.profile'))
+
     current_user.password_hash = generate_password_hash(new_pw)
     db.session.commit()
     flash('Password changed successfully!', 'success')
