@@ -5,3 +5,4 @@ flask-migrate==4.0.5
 werkzeug==3.0.1
 qrcode[pil]==7.4.2
 pillow==10.0.1
+
